@@ -57,6 +57,11 @@ case $host in
 esac
 
 case $host in
+*-solaris*|*-kopensolaris*)
+	AC_MSG_RESULT([Solaris-based])
+	backend="solaris"
+	threads="posix"
+	;;
 *-linux* | *-uclinux*)
 	AC_MSG_RESULT([Linux])
 	backend="linux"
@@ -100,6 +105,17 @@ case $host in
 esac
 
 case $backend in
+solaris)
+	AC_DEFINE(OS_SOLARIS, 1, [Solaris backend])
+	AC_SUBST(OS_SOLARIS)
+	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of the second poll() argument])
+	AC_CHECK_LIB([devinfo], [di_prop_lookup_ints], [],
+		[AC_MSG_ERROR([missing libdevinfo, which is required to get USB device properties])]
+		)
+	AC_CHECK_HEADER([libdevinfo.h], [],
+		[AC_MSG_ERROR([missing libdevinfo.h])]
+		)
+	;;
 linux)
 	AC_DEFINE(OS_LINUX, 1, [Linux backend])
 	AC_SUBST(OS_LINUX)
@@ -138,7 +154,6 @@ yes)
 	LIBS="${LIBS} -pthread"
 esac
 
-	AC_CHECK_HEADERS([poll.h])
 	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])
 	;;
 darwin)
@@ -146,7 +161,6 @@ darwin)
 	AC_SUBST(OS_DARWIN)
 	LIBS="-lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation"
 	LTLDFLAGS="${LTLDFLAGS} -Wl,-prebind"
-	AC_CHECK_HEADERS([poll.h])
 	AC_CHECK_TYPE([nfds_t],
 		[AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])],
 		[AC_DEFINE([POLL_NFDS_TYPE],[unsigned int],[type of second poll() argument])],
@@ -157,7 +171,6 @@ openbsd)
 	AC_SUBST(OS_OPENBSD)
 	THREAD_CFLAGS="-pthread"
 	LIBS="-pthread"
-	AC_CHECK_HEADERS([poll.h])
 	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])
 	;;
 netbsd)
@@ -165,7 +178,6 @@ netbsd)
 	AC_SUBST(OS_NETBSD)
 	THREAD_CFLAGS="-pthread"
 	LIBS="-pthread"
-	AC_CHECK_HEADERS([poll.h])
 	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])
 	;;
 windows)
@@ -180,13 +192,14 @@ haiku)
 	AC_DEFINE(OS_HAIKU, 1, [Haiku backend])
 	AC_SUBST(OS_HAIKU)
 	LIBS="${LIBS} -lbe"
-	AC_CHECK_HEADERS([poll.h])
 	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])
 	;;
 esac
 
+AC_CHECK_HEADERS([poll.h])
 AC_SUBST(LIBS)
 
+AM_CONDITIONAL(OS_SOLARIS, test "x$backend" = xsolaris)
 AM_CONDITIONAL(OS_LINUX, test "x$backend" = xlinux)
 AM_CONDITIONAL(OS_DARWIN, test "x$backend" = xdarwin)
 AM_CONDITIONAL(OS_OPENBSD, test "x$backend" = xopenbsd)

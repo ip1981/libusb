@@ -4,6 +4,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 lib_LTLIBRARIES = libusb-1.0.la
 
+SOLARIS_SRC = os/solaris_usb.c
 POSIX_POLL_SRC = os/poll_posix.c
 LINUX_USBFS_SRC = os/linux_usbfs.c
 DARWIN_USB_SRC = os/darwin_usb.c
@@ -17,11 +18,16 @@ DIST_SUBDIRS =
 EXTRA_DIST = $(LINUX_USBFS_SRC) $(DARWIN_USB_SRC) $(OPENBSD_USB_SRC) \
 	$(NETBSD_USB_SRC) $(WINDOWS_USB_SRC) $(WINCE_USB_SRC) \
 	$(POSIX_POLL_SRC) \
+	$(SOLARIS_SRC) \
 	os/threads_posix.c os/threads_windows.c \
 	os/linux_udev.c os/linux_netlink.c
 
 dist-hook:
 	-cp -r os/haiku $(distdir)/os/haiku
+
+if OS_SOLARIS
+OS_SRC = $(SOLARIS_SRC) $(POSIX_POLL_SRC)
+endif
 
 if OS_LINUX
 
